@@ -16,12 +16,7 @@ bool check_two_sides(int* direction, struct point_2d sides[]);
 
 int main()
 {
-    struct point_2d a = {-1, 0};
-    struct point_2d b = {1, 0};
-    struct point_2d c = {0, 1};
-    struct point_2d d = {0, 0.2};
-
-    printf("%d %d", check_polygon(3, a, b, c), check_polygon(4, a, b, c, d));
+    printf("%LF", calculate_polynom(5L, 4, (ld)3, (ld)-2, (ld)1, (ld)5.45, (ld)7));
 }
 
 bool check_polygon(int point_count, ...)
@@ -94,4 +89,4 @@ ld calculate_polynom(ld x, int degree, ...)
         x_n /= x;
     }
     return accum;
-}
+}//1684.25

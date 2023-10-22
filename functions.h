@@ -16,6 +16,8 @@ enum error_type
 
 int int_from_str(char str[], enum error_type* check_state);
 
+int uint_from_str(char str[], enum error_type* check_state);
+
 double double_from_str(char str[], enum error_type* check_state);
 
 double ld_from_str(char str[], enum error_type* check_state);

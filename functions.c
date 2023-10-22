@@ -27,6 +27,24 @@ int int_from_str(char str[], enum error_type* check_state)
     return is_negative ? result * -1 : result;
 }
 
+int uint_from_str(char str[], enum error_type* check_state)
+{
+    unsigned int result = 0;
+    for (int i = 0; str[i] != '\0'; ++i) {
+        char sym = str[i];
+        if (sym >= '0' && sym <= '9')
+        {
+            result = result * 10 + (sym - '0');
+        } else
+        {
+            *check_state = ERROR;
+            return 0;
+        }
+    }
+    *check_state = CORRECT;
+    return result;
+}
+
 double double_from_str(char str[], enum error_type* check_state)
 {
     int result_up = 0;
