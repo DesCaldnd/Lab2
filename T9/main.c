@@ -12,27 +12,14 @@ struct ll_arr
 };
 
 int check_n_fractions(size_t radix, size_t count, ...);
-bool check_frac(size_t radix, ld frac);
+bool check_frac(size_t radix, ld frac, enum error_type* status);
 ll greatest_common_divider(ll a, ll b);
 struct ll_arr simple_dividers(ll n, enum error_type* status);
+bool is_subset(struct ll_arr lhs, struct ll_arr rhs);
 
 int main()
 {
-    enum error_type status;
-    struct ll_arr a = simple_dividers(145341, &status);
-
-    if (status == CORRECT)
-    {
-        for (int i = 0; i < a.len; ++i)
-        {
-            printf("%lld ", a.arr[i]);
-        }
-        free(a.arr);
-    } else
-    {
-        printf("Bad alloc\n");
-    }
-
+    check_n_fractions(8, 2, (ld)0.1, (ld)0.0625);
 }
 
 int check_n_fractions(size_t radix, size_t count, ...)
@@ -42,12 +29,17 @@ int check_n_fractions(size_t radix, size_t count, ...)
     for (int i = 0; i < count; ++i)
     {
         ld f = va_arg(fracs, ld);
-        printf("Fraction %LF has%s finite representation in number system with radix = %zu", f, check_frac(radix, f) ? "" : "n`t", radix);
+        enum error_type status;
+        bool res = check_frac(radix, f, &status);
+        if (status == CORRECT)
+            printf("Fraction %LF has%s finite representation in number system with radix = %zu\n", f, res ? "" : "n`t", radix);
+        else
+            printf("Bad alloc\n");
     }
     va_end(fracs);
 }
 
-bool check_frac(size_t radix, ld frac)
+bool check_frac(size_t radix, ld frac, enum error_type* status)
 {
     frac = fabsl(frac);
     ll denominator = 1;
@@ -60,8 +52,33 @@ bool check_frac(size_t radix, ld frac)
     ll numerator = frac;
     ll divider = greatest_common_divider(numerator, denominator);
 
-    numerator /= divider;
     denominator /= divider;
+
+    enum error_type s_1, s_2;
+
+    struct ll_arr den_div = simple_dividers(denominator, &s_1);
+
+    if (s_1 == ERROR)
+    {
+        *status = ERROR;
+        return false;
+    }
+
+    struct ll_arr rad_div = simple_dividers(radix, &s_2);
+
+    if (s_2 == ERROR)
+    {
+        *status = ERROR;
+        free(den_div.arr);
+        return false;
+    }
+
+    bool res = is_subset(den_div, rad_div);
+
+    *status = CORRECT;
+    free(den_div.arr);
+    free(rad_div.arr);
+    return res;
 }
 
 ll greatest_common_divider(ll a, ll b) {
@@ -110,4 +127,21 @@ struct ll_arr simple_dividers(ll n, enum error_type* status)
         }
     }
     return res;
+}
+
+bool is_subset(struct ll_arr lhs, struct ll_arr rhs)
+{
+    if (lhs.len > rhs.len)
+        return false;
+
+    int r_index = 0;
+
+    for (int i = 0; i < lhs.len; ++i)
+    {
+        while (rhs.arr[r_index] != lhs.arr[i] && r_index < rhs.len)
+            ++r_index;
+        if (r_index == rhs.len)
+            return false;
+    }
+    return true;
 }
