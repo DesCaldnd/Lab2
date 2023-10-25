@@ -2,6 +2,7 @@
 // Created by Des Caldnd on 10/3/2023.
 //
 #include "functions.h"
+#include <math.h>
 
 int int_from_str(char str[], enum error_type* check_state)
 {
@@ -144,7 +145,7 @@ ll integer_from_n_radix(char *string, int radix, enum error_type* error_return, 
 {
     ll result = 0, multiplier = 1;
     bool has_sign_entered = false, is_negative = false;
-    int length = strnlen_s(string, 64);
+    int length = strnlen(string, 64);
 
     for(int i = length - 1; i >= 0; --i)
     {
@@ -200,7 +201,6 @@ void integer_to_n_radix(ll number, int radix, char* string)
 	int length = logl(number) / logl(radix);
 	int counter = 1;
 	++length;
-
 	if (number < 0)
 	{
 		string[0] = '-';

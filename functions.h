@@ -5,8 +5,8 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef long long ll;
 typedef long double ld;
