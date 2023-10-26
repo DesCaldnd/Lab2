@@ -27,19 +27,24 @@ void buf_delete(struct string* str);
 
 void insert_roman(int val, struct string *buf);
 void integer_to_n_radix_b(int number, int radix, struct string *buf, char (*int_to_char)(int));
-int integer_from_n_radix_b(char *string, int radix, enum error_type* error_return, int (*char_to_int)(char), bool (*is_char_correct)(char, int));
+void insert_from_n_radix_up(struct string *buf, char* string, int radix);
+void insert_from_n_radix_down(struct string *buf, char* string, int radix);
+void insert_bytes(struct string *buf, char* value, size_t size);
+void insert_zr(struct string *buf, unsigned int* value, unsigned int prev, unsigned int cur);
 
 
+int integer_from_n_radix_b_up(char *string, int radix, enum error_type* error_return);
+int integer_from_n_radix_b_down(char *string, int radix, enum error_type* error_return);
 char int_to_char_up(int val);
 char int_to_char_down(int val);
-int char_to_int_up(char);
-bool is_char_correct_down(char, int);
-int char_to_int_up(char);
-bool is_char_correct_down(char, int);
+int char_to_int_up(char sym);
+bool is_char_correct_up(char sym, int radix);
+int char_to_int_down(char sym);
+bool is_char_correct_down(char sym, int radix);
 
 int main()
 {
-    overfprintf(stdout, "My age: %Cv %CV years", 27, 16, 28, 16);
+    overfprintf(stdout, "My age: %Zr ??? %Zr years", 3, 1243);
 }
 
 
@@ -89,7 +94,8 @@ int overfprintf(FILE* stream, char* format, ...)
                 }
                 case Zr:
                 {
-
+                    unsigned int arg = va_arg(args, unsigned int);
+                    insert_zr(&buf, &arg, 0, 1);
                     break;
                 }
                 case Cv:
@@ -108,32 +114,40 @@ int overfprintf(FILE* stream, char* format, ...)
                 }
                 case to:
                 {
-
+                    char* str = va_arg(args, char*);
+                    int radix = va_arg(args, int);
+                    insert_from_n_radix_down(&buf, str, radix);
                     break;
                 }
                 case TO:
                 {
-
+                    char* str = va_arg(args, char*);
+                    int radix = va_arg(args, int);
+                    insert_from_n_radix_up(&buf, str, radix);
                     break;
                 }
                 case mi:
                 {
-
+                    int arg = va_arg(args, int);
+                    insert_bytes(&buf, &arg, sizeof(int));
                     break;
                 }
                 case mu:
                 {
-
+                    unsigned int arg = va_arg(args, unsigned int);
+                    insert_bytes(&buf, &arg, sizeof(unsigned int));
                     break;
                 }
                 case md:
                 {
-
+                    double arg = va_arg(args, double);
+                    insert_bytes(&buf, &arg, sizeof(double));
                     break;
                 }
                 case mf:
                 {
-
+                    float arg = va_arg(args, double );
+                    insert_bytes(&buf, &arg, sizeof(float));
                     break;
                 }
             }
@@ -249,7 +263,106 @@ void integer_to_n_radix_b(int number, int radix, struct string *buf, char (*int_
     free(str);
 }
 
-int integer_from_n_radix_b(char *string, int radix, enum error_type* error_return, int (*char_to_int)(char), bool (*is_char_correct)(char, int))
+void insert_from_n_radix_up(struct string *buf, char* string, int radix)
+{
+    enum error_type status;
+    if (radix < 2 || radix > 36)
+        radix = 10;
+    int res = integer_from_n_radix_b_up(string, radix, &status);
+
+    if(status == ERROR)
+        return;
+
+    char formated[36];
+    sprintf(formated, "%d", res);
+
+    for (int i = 0; formated[i] != '\0'; ++i)
+    {
+        buf_push_back(buf, formated[i]);
+        if (buf->buf == NULL)
+            return;
+    }
+}
+
+void insert_from_n_radix_down(struct string *buf, char* string, int radix)
+{
+    enum error_type status;
+    if (radix < 2 || radix > 36)
+        radix = 10;
+    int res = integer_from_n_radix_b_down(string, radix, &status);
+
+    if(status == ERROR)
+        return;
+
+    char formated[36];
+    sprintf(formated, "%d", res);
+
+    for (int i = 0; formated[i] != '\0'; ++i)
+    {
+        buf_push_back(buf, formated[i]);
+        if (buf->buf == NULL)
+            return;
+    }
+}
+
+void insert_bytes(struct string *buf, char* value, size_t size)
+{
+    for (int i = size - 1; i >= 0; --i)
+    {
+        for (int j = 7; j >= 0; --j)
+        {
+            buf_push_back(buf, (value[i] & (1u << j)) == 0 ? '0' : '1');
+            if (buf->buf == NULL)
+                return;
+        }
+        if (i != 0)
+        {
+            buf_push_back(buf, ' ');
+            if (buf->buf == NULL)
+                return;
+        }
+    }
+}
+
+void insert_zr(struct string *buf, unsigned int* value, unsigned int prev, unsigned int cur)
+{
+    unsigned int next = prev + cur;
+
+    if(*value >= next + cur)
+    {
+        insert_zr(buf, value, cur, next);
+        if (*value >= next)
+        {
+            buf_push_back(buf, ' ');
+            if (buf->buf == NULL)
+                return;
+            *value -= next;
+            char formated[36];
+            sprintf(formated, "%u", next);
+
+            for (int i = 0; formated[i] != '\0'; ++i)
+            {
+                buf_push_back(buf, formated[i]);
+                if (buf->buf == NULL)
+                    return;
+            }
+        }
+    } else
+    {
+        char formated[36];
+        sprintf(formated, "%u", next);
+
+        *value -= next;
+        for (int i = 0; formated[i] != '\0'; ++i)
+        {
+            buf_push_back(buf, formated[i]);
+            if (buf->buf == NULL)
+                return;
+        }
+    }
+}
+
+int integer_from_n_radix_b_up(char *string, int radix, enum error_type* error_return)
 {
     int result = 0, multiplier = 1;
     bool has_sign_entered = false, is_negative = false;
@@ -257,10 +370,38 @@ int integer_from_n_radix_b(char *string, int radix, enum error_type* error_retur
 
     for(int i = length - 1; i >= 0; --i)
     {
-        if (is_char_correct(string[i], radix) && !has_sign_entered)
+        if (is_char_correct_up(string[i], radix))
         {
-            result += char_to_int(string[i]) * multiplier;
+            result += char_to_int_up(string[i]) * multiplier;
             multiplier *= radix;
+            has_sign_entered = true;
+        } else if ((string[i] == '+' || string[i] == '-') && !has_sign_entered)
+        {
+            is_negative = string[i] == '-';
+            has_sign_entered = true;
+        } else
+        {
+            *error_return = ERROR;
+            return 0;
+        }
+    }
+    *error_return = CORRECT;
+    return is_negative ? result * -1 : result;
+}
+
+int integer_from_n_radix_b_down(char *string, int radix, enum error_type* error_return)
+{
+    int result = 0, multiplier = 1;
+    bool has_sign_entered = false, is_negative = false;
+    int length = strnlen(string, 64);
+
+    for(int i = length - 1; i >= 0; --i)
+    {
+        if (is_char_correct_down(string[i], radix))
+        {
+            result += char_to_int_down(string[i]) * multiplier;
+            multiplier *= radix;
+            has_sign_entered = true;
         } else if ((string[i] == '+' || string[i] == '-') && !has_sign_entered)
         {
             is_negative = string[i] == '-';
@@ -324,24 +465,32 @@ char int_to_char_down(int val)
         return val - 10 + 'a';
 }
 
-int char_to_int_up(char)
+int char_to_int_up(char sym)
 {
-
+    if (sym >= '0' && sym <= '9')
+        return sym - '0';
+    else
+        return sym - 'A' + 10;
 }
 
-bool is_char_correct_down(char, int)
+bool is_char_correct_up(char sym, int radix)
 {
-
+    int val = char_to_int_up(sym);
+    return val >= 0 && val < radix;
 }
 
-int char_to_int_up(char)
+int char_to_int_down(char sym)
 {
-
+    if (sym >= '0' && sym <= '9')
+        return sym - '0';
+    else
+        return sym - 'a' + 10;
 }
 
-bool is_char_correct_down(char, int)
+bool is_char_correct_down(char sym, int radix)
 {
-
+    int val = char_to_int_down(sym);
+    return val >= 0 && val < radix;
 }
 
 enum flag_type get_flag_type(char* str)
