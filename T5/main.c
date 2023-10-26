@@ -30,7 +30,7 @@ void integer_to_n_radix_b(int number, int radix, struct string *buf, char (*int_
 void insert_from_n_radix_up(struct string *buf, char* string, int radix);
 void insert_from_n_radix_down(struct string *buf, char* string, int radix);
 void insert_bytes(struct string *buf, char* value, size_t size);
-void insert_zr(struct string *buf, unsigned int* value, unsigned int prev, unsigned int cur);
+void insert_zr(struct string *buf, unsigned int value);
 
 
 int integer_from_n_radix_b_up(char *string, int radix, enum error_type* error_return);
@@ -41,6 +41,7 @@ int char_to_int_up(char sym);
 bool is_char_correct_up(char sym, int radix);
 int char_to_int_down(char sym);
 bool is_char_correct_down(char sym, int radix);
+void build_zr(char* str, int index, int prev, int cur, unsigned int *val);
 
 int main()
 {
@@ -95,7 +96,7 @@ int overfprintf(FILE* stream, char* format, ...)
                 case Zr:
                 {
                     unsigned int arg = va_arg(args, unsigned int);
-                    insert_zr(&buf, &arg, 0, 1);
+                    insert_zr(&buf, arg);
                     break;
                 }
                 case Cv:
@@ -324,41 +325,39 @@ void insert_bytes(struct string *buf, char* value, size_t size)
     }
 }
 
-void insert_zr(struct string *buf, unsigned int* value, unsigned int prev, unsigned int cur)
+void insert_zr(struct string *buf, unsigned int value)
 {
-    unsigned int next = prev + cur;
+    char str[1024];
 
-    if(*value >= next + cur)
+    build_zr(str, 0, 1, 1, &value);
+
+    for (int i = 0; str[i] != '\0'; ++i)
     {
-        insert_zr(buf, value, cur, next);
-        if (*value >= next)
-        {
-            buf_push_back(buf, ' ');
-            if (buf->buf == NULL)
-                return;
-            *value -= next;
-            char formated[36];
-            sprintf(formated, "%u", next);
+        buf_push_back(buf, str[i]);
+        if (buf->buf == NULL)
+            return;
+    }
+    buf_push_back(buf, '1');
+}
 
-            for (int i = 0; formated[i] != '\0'; ++i)
-            {
-                buf_push_back(buf, formated[i]);
-                if (buf->buf == NULL)
-                    return;
-            }
+void build_zr(char* str, int index, int prev, int cur, unsigned int *val)
+{
+    if (*val >= cur + prev)
+    {
+        build_zr(str, index + 1, cur, prev + cur, val);
+        if (*val >= cur)
+        {
+            *val -= cur;
+            str[index] = '1';
+        } else
+        {
+            str[index] = '0';
         }
     } else
     {
-        char formated[36];
-        sprintf(formated, "%u", next);
-
-        *value -= next;
-        for (int i = 0; formated[i] != '\0'; ++i)
-        {
-            buf_push_back(buf, formated[i]);
-            if (buf->buf == NULL)
-                return;
-        }
+        *val -= cur;
+        str[index] = '1';
+        str[index + 1] = '\0';
     }
 }
 
