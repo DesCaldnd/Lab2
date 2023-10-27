@@ -68,7 +68,7 @@ int overfscanf(FILE* stream, char* format, ...)
                 {
                     char str[128];
                     int *arg = va_arg(args, int*);
-                    if (scanf("%s", str) != 0)
+                    if (fscanf(stream, "%s", str) != 0)
                     {
                         if (int_from_roman(str, arg))
                             ++result;
@@ -79,7 +79,7 @@ int overfscanf(FILE* stream, char* format, ...)
                 {
                     char str[128];
                     unsigned int *arg = va_arg(args, unsigned int*);
-                    if (scanf("%s", str) != 0)
+                    if (fscanf(stream, "%s", str) != 0)
                     {
                         if (uint_from_zr(str, arg))
                             ++result;
@@ -91,7 +91,7 @@ int overfscanf(FILE* stream, char* format, ...)
                     char str[128];
                     int *arg = va_arg(args, int*);
                     int radix = va_arg(args, int);
-                    if (scanf("%s", str) != 0)
+                    if (fscanf(stream, "%s", str) != 0)
                     {
                         if (int_from_cv(str, arg, radix, &char_to_int_down, &is_char_correct_down))
                             ++result;
@@ -103,7 +103,7 @@ int overfscanf(FILE* stream, char* format, ...)
                     char str[128];
                     int *arg = va_arg(args, int*);
                     int radix = va_arg(args, int);
-                    if (scanf("%s", str) != 0)
+                    if (fscanf(stream, "%s", str) != 0)
                     {
                         if (int_from_cv(str, arg, radix, &char_to_int_up, &is_char_correct_up))
                             ++result;
