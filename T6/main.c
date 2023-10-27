@@ -9,7 +9,11 @@
 enum flag_type
 { Ro, Zr, Cv, CV, St_f, UNDEFINED };
 
+enum flag_type_s
+{ INT, DOUBLE, LDOUBLE, LLONG, POINTER, CHAR, STRING, UNDEF };
+
 enum flag_type get_flag_type(char* str);
+enum flag_type_s get_flag_type_s(char* str);
 int overfscanf(FILE* stream, char* format, ...);
 int oversscanf(char* stream, char* format, ...);
 
@@ -29,16 +33,17 @@ int get_offset(char* str, int count);
 
 int main()
 {
-    int res, b;
-    char str[] = "CXXVI 5";
-    int c = oversscanf(str, "%Ro %d", &res, &b);
+    int d, k, g, num, base = 10;
+    overfscanf(stdin, "%d %Cv", &num, &k, 11);
 
-    printf("%d %d %d", res, b, c);
+    printf("%d %d\n", num, k);
 }
 
 
 int overfscanf(FILE* stream, char* format, ...)
 {
+    enum flag_type_s flags[256];
+    int f_count = 0;
     struct string buf;
     buf.buf = NULL;
     int result = 0;
@@ -57,7 +62,52 @@ int overfscanf(FILE* stream, char* format, ...)
     {
         if (format[counter] == '%' && (f_type = get_flag_type(format + counter + 1)) != St_f)
         {
+            buf_push_back(&buf, '\0');
+            if (buf.buf == NULL)
+                return result;
             result += vfscanf(stream, buf.buf, args);
+            for (int i = 0; i < f_count; ++i)
+            {
+                switch (flags[i])
+                {
+                    case INT:
+                    {
+                        va_arg(args, int);
+                        break;
+                    }
+                    case DOUBLE:
+                    {
+                        va_arg(args, double );
+                        break;
+                    }
+                    case LDOUBLE:
+                    {
+                        va_arg(args, long double);
+                        break;
+                    }
+                    case LLONG:
+                    {
+                        va_arg(args, long long);
+                        break;
+                    }
+                    case POINTER:
+                    {
+                        va_arg(args, char*);
+                        break;
+                    }
+                    case CHAR:
+                    {
+                        va_arg(args, char);
+                        break;
+                    }
+                    case STRING:
+                    {
+                        va_arg(args, char*);
+                        break;
+                    }
+                }
+            }
+            f_count = 0;
             buf_reinit(&buf);
             if (buf.buf == NULL)
                 return result;
@@ -91,7 +141,7 @@ int overfscanf(FILE* stream, char* format, ...)
                     char str[128];
                     int *arg = va_arg(args, int*);
                     int radix = va_arg(args, int);
-                    if (fscanf(stream, "%s", str) != 0)
+                    if (scanf("%s", str) != 0)
                     {
                         if (int_from_cv(str, arg, radix, &char_to_int_down, &is_char_correct_down))
                             ++result;
@@ -114,6 +164,11 @@ int overfscanf(FILE* stream, char* format, ...)
             counter += 2;
         } else
         {
+            if (f_type == St_f)
+            {
+                flags[f_count] = get_flag_type_s(format + counter + 1);
+                ++f_count;
+            }
             buf_push_back(&buf, format[counter]);
             if (buf.buf == NULL)
                 return result;
@@ -325,6 +380,8 @@ bool uint_from_zr(char* str, unsigned int* out)
 
 bool int_from_cv(char* str, int* out, int radix, int (*char_to_int)(char), bool (*is_char_correct)(char, int))
 {
+    if (radix < 2 || radix > 36)
+        radix = 10;
     enum error_type state;
     int res = integer_from_n_radix(str, radix, &state, char_to_int, is_char_correct);
     *out = res;
@@ -399,4 +456,24 @@ int get_offset(char* str, int count)
     }
 
     return res;
+}
+
+enum flag_type_s get_flag_type_s(char* str)
+{
+    if (str[0] == 'i' || str[0] == 'd' || str[0] == 'x' || str[0] == 'X' || str[0] == 'o')
+        return INT;
+    else if((str[0] == 'l' && str[1] == 'f') || str[0] == 'f')
+        return DOUBLE;
+    else if(str[0] == 'L' && str[1] == 'F')
+        return LDOUBLE;
+    else if(str[0] == 'p')
+        return POINTER;
+    else if(str[0] == 'c')
+        return CHAR;
+    else if(str[0] == 's')
+        return STRING;
+    else
+        return UNDEF;
+    
+    //INT, DOUBLE, LDOUBLE, LLONG, POINTER, CHAR, STRING, UNDEF
 }
