@@ -12,18 +12,9 @@
 enum flag_type
 { Ro, Zr, Cv, CV, to, TO, mi, mu, md, mf, ST_F, UNDEF };
 
-struct string
-{
-    char* buf;
-    int capacity, length;
-};
-
 int overfprintf(FILE* stream, char* format, ...);
+int oversprintf(char* out, char* format, ...);
 enum flag_type get_flag_type(char* str);
-void buf_reinit(struct string* str);
-void buf_realloc(struct string* str);
-void buf_push_back(struct string* str, char val);
-void buf_delete(struct string* str);
 
 void insert_roman(int val, struct string *buf);
 void integer_to_n_radix_b(int number, int radix, struct string *buf, char (*int_to_char)(int));
@@ -45,7 +36,9 @@ void build_zr(char* str, int index, int prev, int cur, unsigned int *val);
 
 int main()
 {
-    overfprintf(stdout, "My age: %Zr ??? %Zr years", 3, 1243);
+    char out[1024];
+    oversprintf(out, "My age: %Zr ??? %Zr years", 3, 1243);
+    printf("%s", out);
 }
 
 
@@ -173,6 +166,139 @@ int overfprintf(FILE* stream, char* format, ...)
         return result;
 
     result += vfprintf(stream, buf.buf, args);
+
+    buf_delete(&buf);
+    va_end(args);
+
+    return result;
+}
+
+
+int oversprintf(char* out, char* format, ...)
+{
+    struct string buf;
+    buf.buf = NULL;
+    int result = 0;
+    int counter = 0;
+    enum flag_type f_type;
+    bool has_st_flag = false;
+    va_list args;
+    va_start(args, format);
+
+    buf_reinit(&buf);
+
+    if (buf.buf == NULL)
+        return 0;
+
+
+    while(format[counter] != '\0')
+    {
+        if (format[counter] == '%' && (f_type = get_flag_type(format + counter + 1)) != ST_F)
+        {
+            if (has_st_flag)
+            {
+                buf_push_back(&buf, '\0');
+                if (buf.buf == NULL)
+                    return result;
+
+                result += vsprintf(out + result, buf.buf, args);
+
+                buf_reinit(&buf);
+
+                if (buf.buf == NULL)
+                    return result;
+
+                has_st_flag = false;
+            }
+
+            switch (f_type)
+            {
+                case Ro:
+                {
+                    int arg = va_arg(args, int);
+                    insert_roman(arg, &buf);
+                    break;
+                }
+                case Zr:
+                {
+                    unsigned int arg = va_arg(args, unsigned int);
+                    insert_zr(&buf, arg);
+                    break;
+                }
+                case Cv:
+                {
+                    int arg = va_arg(args, int);
+                    int radix = va_arg(args, int);
+                    integer_to_n_radix_b(arg, radix, &buf, &int_to_char_down);
+                    break;
+                }
+                case CV:
+                {
+                    int arg = va_arg(args, int);
+                    int radix = va_arg(args, int);
+                    integer_to_n_radix_b(arg, radix, &buf, &int_to_char_up);
+                    break;
+                }
+                case to:
+                {
+                    char* str = va_arg(args, char*);
+                    int radix = va_arg(args, int);
+                    insert_from_n_radix_down(&buf, str, radix);
+                    break;
+                }
+                case TO:
+                {
+                    char* str = va_arg(args, char*);
+                    int radix = va_arg(args, int);
+                    insert_from_n_radix_up(&buf, str, radix);
+                    break;
+                }
+                case mi:
+                {
+                    int arg = va_arg(args, int);
+                    insert_bytes(&buf, &arg, sizeof(int));
+                    break;
+                }
+                case mu:
+                {
+                    unsigned int arg = va_arg(args, unsigned int);
+                    insert_bytes(&buf, &arg, sizeof(unsigned int));
+                    break;
+                }
+                case md:
+                {
+                    double arg = va_arg(args, double);
+                    insert_bytes(&buf, &arg, sizeof(double));
+                    break;
+                }
+                case mf:
+                {
+                    float arg = va_arg(args, double );
+                    insert_bytes(&buf, &arg, sizeof(float));
+                    break;
+                }
+            }
+
+            if (buf.buf == NULL)
+                return result;
+
+            counter += 2;
+        } else
+        {
+            if (f_type == ST_F)
+                has_st_flag = true;
+            buf_push_back(&buf, format[counter]);
+            if (buf.buf == NULL)
+                return result;
+        }
+        f_type = UNDEF;
+        ++counter;
+    }
+    buf_push_back(&buf, '\0');
+    if (buf.buf == NULL)
+        return result;
+
+    result += vsprintf(out + result, buf.buf, args);
 
     buf_delete(&buf);
     va_end(args);
@@ -413,39 +539,6 @@ int integer_from_n_radix_b_down(char *string, int radix, enum error_type* error_
     }
     *error_return = CORRECT;
     return is_negative ? result * -1 : result;
-}
-
-void buf_reinit(struct string* str)
-{
-    if (str->buf != NULL)
-        free(str->buf);
-    str->buf = malloc(65 * sizeof(char));
-    str->capacity = 64;
-    str->length = 0;
-}
-
-void buf_push_back(struct string* str, char val)
-{
-    if (str->length >= str->capacity)
-    {
-        buf_realloc(str);
-    }
-    if (str->buf == NULL)
-        return;
-
-    str->buf[str->length] = val;
-    ++str->length;
-}
-
-void buf_realloc(struct string* str)
-{
-    str->buf = realloc(str->buf, (str->capacity * 2 + 2) * sizeof(char));
-    str->capacity = str->capacity * 2 + 1;
-}
-
-void buf_delete(struct string* str)
-{
-    free(str->buf);
 }
 
 char int_to_char_up(int val)

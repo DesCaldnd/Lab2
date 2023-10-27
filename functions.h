@@ -14,6 +14,12 @@ typedef long double ld;
 enum error_type
 { CORRECT, ERROR };
 
+struct string
+{
+    char* buf;
+    int capacity, length;
+};
+
 int int_from_str(char str[], enum error_type* check_state);
 
 int uint_from_str(char str[], enum error_type* check_state);
@@ -49,3 +55,11 @@ void integer_to_n_radix(ll number, int radix, char* string);
 char int_to_char(int num);
 
 ld clamp(ld number, ld low_border, ld up_border);
+
+void buf_reinit(struct string* str);
+
+void buf_realloc(struct string* str);
+
+void buf_push_back(struct string* str, char val);
+
+void buf_delete(struct string* str);

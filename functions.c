@@ -264,3 +264,36 @@ ld clamp(ld number, ld low_border, ld up_border)
 {
     return number < low_border ? low_border : number > up_border ? up_border : number;
 }
+
+void buf_reinit(struct string* str)
+{
+    if (str->buf != NULL)
+        free(str->buf);
+    str->buf = malloc(65 * sizeof(char));
+    str->capacity = 64;
+    str->length = 0;
+}
+
+void buf_push_back(struct string* str, char val)
+{
+    if (str->length >= str->capacity)
+    {
+        buf_realloc(str);
+    }
+    if (str->buf == NULL)
+        return;
+
+    str->buf[str->length] = val;
+    ++str->length;
+}
+
+void buf_realloc(struct string* str)
+{
+    str->buf = realloc(str->buf, (str->capacity * 2 + 2) * sizeof(char));
+    str->capacity = str->capacity * 2 + 1;
+}
+
+void buf_delete(struct string* str)
+{
+    free(str->buf);
+}
