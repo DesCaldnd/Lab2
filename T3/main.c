@@ -29,7 +29,7 @@ void process_one_file(FILE* in, char* substr, size_t str_len, struct substr_arra
 
 int main()
 {
-    struct substr_array arr = get_all_ascensions("  ", 1, "../../T3/1.txt");
+    struct substr_array arr = get_all_ascensions("  ", 1, "../T3/1.txt");
 
     if (arr.arr != NULL)
     {
@@ -64,7 +64,7 @@ struct substr_array get_all_ascensions(char* substr, size_t file_count, ...)
     for (int i = 0; i < file_count; ++i)
     {
         char * filepath = va_arg(filepaths, char*);
-        FILE* in = fopen(filepath, "r+");
+        FILE* in = fopen(filepath, "rb+");
         if (in != NULL)
         {
             process_one_file(in, substr, str_len, &res, filepath);
@@ -84,7 +84,7 @@ void process_one_file(FILE* in, char* substr, size_t str_len, struct substr_arra
     ll str_n = 1, sym_n = 1, index = 0;
     char sym;
 
-    while((sym = fgetc(in)) != EOF)
+    while((fread(&sym, sizeof(char), 1, in)) != 0)
     {
         if (sym == substr[index])
         {
