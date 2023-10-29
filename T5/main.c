@@ -37,7 +37,7 @@ void build_zr(char* str, int index, int prev, int cur, unsigned int *val);
 int main()
 {
     char out[1024];
-    oversprintf(out, "My age: %Cv ??? %To years", -254, 16, "0001F4", 16);
+    oversprintf(out, "My age: %Cv ??? %to years", -254, 16, "-0001f4", 16);
     printf("%s", out);
 }
 
@@ -371,10 +371,19 @@ void integer_to_n_radix_b(int number, int radix, struct string *buf, char (*int_
 {
     if (radix < 2 || radix > 36)
         radix = 10;
+    int counter = 1;
+    if (number < 0)
+    {
+        buf_push_back(buf, '-');
+        if (buf->buf == NULL)
+        {
+            return;
+        }
+        number *= -1;
+    }
     int length = logl(number) / logl(radix) + 1;
     if (number < 0)
         ++length;
-    int counter = 1;
 
     char* str = malloc(length * sizeof(char));
     if (str == NULL)
@@ -510,11 +519,10 @@ int integer_from_n_radix_b_up(char *string, int radix, enum error_type* error_re
 
     for(int i = length - 1; i >= 0; --i)
     {
-        if (is_char_correct_up(string[i], radix))
+        if (is_char_correct_up(string[i], radix) && !has_sign_entered)
         {
             result += char_to_int_up(string[i]) * multiplier;
             multiplier *= radix;
-            has_sign_entered = true;
         } else if ((string[i] == '+' || string[i] == '-') && !has_sign_entered)
         {
             is_negative = string[i] == '-';
@@ -537,11 +545,10 @@ int integer_from_n_radix_b_down(char *string, int radix, enum error_type* error_
 
     for(int i = length - 1; i >= 0; --i)
     {
-        if (is_char_correct_down(string[i], radix))
+        if (is_char_correct_down(string[i], radix) && !has_sign_entered)
         {
             result += char_to_int_down(string[i]) * multiplier;
             multiplier *= radix;
-            has_sign_entered = true;
         } else if ((string[i] == '+' || string[i] == '-') && !has_sign_entered)
         {
             is_negative = string[i] == '-';
