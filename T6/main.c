@@ -34,9 +34,10 @@ int get_offset(char* str, int count);
 int main()
 {
     int d, k, g, num, base = 10;
-    overfscanf(stdin, "%d %Cv", &num, &k, 11);
+	char str[50];
+    overfscanf(stdin, "%Ro %Cv %s", &num, &k, 20, str);
 
-    printf("%d %d\n", num, k);
+    printf("%d %d %s\n", num, k, str);
 }
 
 
@@ -466,7 +467,7 @@ enum flag_type_s get_flag_type_s(char* str)
         return DOUBLE;
     else if(str[0] == 'L' && str[1] == 'F')
         return LDOUBLE;
-    else if(str[0] == 'p')
+    else if(str[0] == 'p' || str[0] == 'n')
         return POINTER;
     else if(str[0] == 'c')
         return CHAR;

@@ -12,7 +12,7 @@ short add_digits_n_radix(size_t radix, char* lhs, char rhs, short a);
 
 int main()
 {
-    char* str = sum_n_radix(8, 3, "5", "175", "3");
+    char* str = sum_n_radix(8, 3, "000000000000000000000000000000000000000000000000000000000", "00000000000", "0000000");
 
     printf("%s", str);
 

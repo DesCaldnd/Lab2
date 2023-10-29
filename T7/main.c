@@ -2,6 +2,7 @@
 // Created by Des Caldnd on 10/23/2023.
 //
 #include "../functions.h"
+#include <math.h>
 
 ld dihotomy_equation(ld a, ld b, ld eps, ld (*func)(ld));
 ld f(ld x)
@@ -11,11 +12,12 @@ ld f(ld x)
 
 int main()
 {
-    printf("%LF", dihotomy_equation(2, 3, 0.00001, &f));
+    printf("%LF", dihotomy_equation(2, 3, -0.00001, &f));
 }
 
 ld dihotomy_equation(ld a, ld b, ld eps, ld (*func)(ld))
 {
+	eps = fabsl(eps);
     ld mid = (a + b) / 2, y;
 
     while (fabsl(y = func(mid)) > eps)

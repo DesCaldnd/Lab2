@@ -3,6 +3,7 @@
 //
 #include <stdarg.h>
 #include "../functions.h"
+#include <math.h>
 
 ld average_geom(size_t size, ...);
 ld power_ld_int_rec(long double base, int pow);

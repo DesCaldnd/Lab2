@@ -10,7 +10,7 @@
 #include <math.h>
 
 enum flag_type
-{ Ro, Zr, Cv, CV, to, TO, mi, mu, md, mf, ST_F, UNDEF };
+{ Ro, Zr, Cv, CV, to, TO, mi, mu, md, mf, n, ST_F, UNDEF };
 
 int overfprintf(FILE* stream, char* format, ...);
 int oversprintf(char* out, char* format, ...);
@@ -37,7 +37,7 @@ void build_zr(char* str, int index, int prev, int cur, unsigned int *val);
 int main()
 {
     char out[1024];
-    oversprintf(out, "My age: %Zr ??? %Zr years", 3, 1243);
+    oversprintf(out, "My age: %Cv ??? %To years", -254, 16, "0001F4", 16);
     printf("%s", out);
 }
 
@@ -51,6 +51,7 @@ int overfprintf(FILE* stream, char* format, ...)
     bool has_st_flag = false;
     va_list args;
     va_start(args, format);
+	buf.buf = NULL;
 
     buf_reinit(&buf);
 
@@ -62,7 +63,7 @@ int overfprintf(FILE* stream, char* format, ...)
     {
         if (format[counter] == '%' && (f_type = get_flag_type(format + counter + 1)) != ST_F)
         {
-            if (has_st_flag)
+            if (has_st_flag || f_type == n)
             {
                 buf_push_back(&buf, '\0');
                 if (buf.buf == NULL)
@@ -144,6 +145,13 @@ int overfprintf(FILE* stream, char* format, ...)
                     insert_bytes(&buf, &arg, sizeof(float));
                     break;
                 }
+				case n:
+				{
+					int *arg = va_arg(args, int*);
+					*arg = result;
+					--counter;
+					break;
+				}
             }
 
             if (buf.buf == NULL)
@@ -195,7 +203,7 @@ int oversprintf(char* out, char* format, ...)
     {
         if (format[counter] == '%' && (f_type = get_flag_type(format + counter + 1)) != ST_F)
         {
-            if (has_st_flag)
+            if (has_st_flag || f_type == n)
             {
                 buf_push_back(&buf, '\0');
                 if (buf.buf == NULL)
@@ -277,6 +285,13 @@ int oversprintf(char* out, char* format, ...)
                     insert_bytes(&buf, &arg, sizeof(float));
                     break;
                 }
+				case n:
+				{
+					int *arg = va_arg(args, int*);
+					*arg = result;
+					--counter;
+					break;
+				}
             }
 
             if (buf.buf == NULL)
@@ -607,6 +622,8 @@ enum flag_type get_flag_type(char* str)
         return md;
     else if (str[0] == 'm' && str[1] == 'f')
         return mf;
+	else if (str[0] == 'n')
+		return n;
     else
         return ST_F;
 }

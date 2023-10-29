@@ -4,6 +4,7 @@
 #include "../functions.h"
 #include <stdarg.h>
 #include <stdlib.h>
+#include <math.h>
 
 struct ll_arr
 {
@@ -11,7 +12,7 @@ struct ll_arr
     size_t len, capacity;
 };
 
-int check_n_fractions(size_t radix, size_t count, ...);
+void check_n_fractions(size_t radix, size_t count, ...);
 bool check_frac(size_t radix, ld frac, enum error_type* status);
 ll greatest_common_divider(ll a, ll b);
 struct ll_arr simple_dividers(ll n, enum error_type* status);
@@ -19,10 +20,10 @@ bool is_subset(struct ll_arr lhs, struct ll_arr rhs);
 
 int main()
 {
-    check_n_fractions(8, 2, (ld)0.1, (ld)0.0625);
+    check_n_fractions(16, 2, (ld)0.0625, (ld)0.0625);
 }
 
-int check_n_fractions(size_t radix, size_t count, ...)
+void check_n_fractions(size_t radix, size_t count, ...)
 {
     va_list fracs;
     va_start(fracs, count);

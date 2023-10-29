@@ -29,7 +29,7 @@ void process_one_file(FILE* in, char* substr, size_t str_len, struct substr_arra
 
 int main()
 {
-    struct substr_array arr = get_all_ascensions("ak`", 1, "../T3/1.txt");
+    struct substr_array arr = get_all_ascensions("  ", 1, "../../T3/1.txt");
 
     if (arr.arr != NULL)
     {
