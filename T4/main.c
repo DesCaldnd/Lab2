@@ -79,14 +79,12 @@ ld calculate_polynom(ld x, int degree, ...)
     va_list coeffs;
     va_start(coeffs, degree);
 
-    ld x_n = power_ld_int(x, degree);
 
     ld accum = 0;
 
     for (int i = degree; i >= 0; --i)
     {
-        accum += x_n * va_arg(coeffs, ld);
-        x_n /= x;
+        accum += accum * x + va_arg(coeffs, ld);
     }
     return accum;
 }//1684.25

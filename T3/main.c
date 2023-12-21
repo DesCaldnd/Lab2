@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include "../functions.h"
 
+
 struct substr
 {
     char* filename;
